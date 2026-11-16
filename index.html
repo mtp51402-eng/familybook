@@ -1,0 +1,1185 @@
+<!doctype html>
+<html lang="ml">
+<head>
+<meta charset="utf-8">
+<title>Family Book</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2F7D5B">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="robots" content="noindex,nofollow">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+Malayalam:wght@400;500;600;700&family=Outfit:wght@500;600&display=swap">
+<style>
+/* Layout: sticky title bar, one scrolling view (tree / people / more), bottom tab bar, round add button, bottom sheet for details and forms. */
+:root {
+  --bg: #F3F7F4;
+  --surface: #FFFFFF;
+  --ink: #16231C;
+  --muted: #5A6B61;
+  --line: #D9E4DC;
+  --accent: #2F7D5B;
+  --accent-ink: #FFFFFF;
+  --accent-soft: #DDF0E5;
+  --warn: #8A5A00;
+  --warn-soft: #FFF1D0;
+  --danger: #B42318;
+  --font-display: "Outfit", "Noto Sans Malayalam", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-body: "Inter", "Noto Sans Malayalam", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E1713;
+    --surface: #16231C;
+    --ink: #E6F2EA;
+    --muted: #96AB9E;
+    --line: #263A2F;
+    --accent: #5CCB97;
+    --accent-ink: #07251A;
+    --accent-soft: #1B3A2B;
+    --warn: #FFD98A;
+    --warn-soft: #3A2F0F;
+    --danger: #FF8A80;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+[hidden] { display: none !important; }
+.bi { display: inline-flex; flex-wrap: wrap; align-items: baseline; column-gap: 6px; }
+.bi b { font-weight: 600; }
+.bi small { font-size: 0.78em; opacity: 0.7; font-weight: 400; }
+
+#app {
+  min-height: 100dvh;
+  max-width: 680px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 14px 8px; }
+.bar h1 { margin: 0; font-family: var(--font-display); font-size: 1.35rem; font-weight: 600; line-height: 1.2; }
+.bar .count { font-size: 0.85rem; color: var(--muted); }
+#view { flex: 1 1 auto; padding-bottom: 150px; }
+.view { display: flex; flex-direction: column; gap: 14px; }
+
+.tabs {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.tabs-in { max-width: 680px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
+.tabs button { border: 0; background: transparent; padding: 10px 4px 9px; display: flex; flex-direction: column; align-items: center; gap: 2px; color: var(--muted); font-size: 0.85rem; }
+.tabs button .bi { flex-direction: column; align-items: center; row-gap: 0; }
+.tabs button[aria-current="page"] { color: var(--accent); }
+.tabs button[aria-current="page"] b { text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 2px; }
+.fab {
+  position: fixed; z-index: 6;
+  right: max(16px, env(safe-area-inset-right, 0px));
+  bottom: calc(68px + env(safe-area-inset-bottom, 0px));
+  border: 0; border-radius: 28px; min-height: 52px; padding: 0 20px;
+  background: var(--accent); color: var(--accent-ink);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.22);
+  display: flex; align-items: center; gap: 8px;
+}
+.fab svg { flex: 0 0 auto; }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 14px; }
+.card h2 { margin: 0 0 8px; font-size: 0.82rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.bday { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding-block: 5px; border-top: 1px solid var(--line); }
+.bday:first-of-type { border-top: 0; }
+.bday span:last-child { color: var(--muted); font-size: 0.9rem; text-align: right; }
+
+.empty { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 28px 8px; }
+.empty h2 { margin: 0; font-family: var(--font-display); font-size: 1.3rem; }
+.empty p { margin: 0; color: var(--muted); max-width: 34ch; }
+
+.tree { display: flex; flex-direction: column; gap: 14px; }
+.node { display: flex; flex-direction: column; gap: 8px; }
+.unit { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.amp { color: var(--muted); font-weight: 600; }
+.pcard {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 1px;
+  text-align: left; min-width: 0; max-width: 100%;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 8px 12px;
+}
+.pcard:active { background: var(--accent-soft); }
+.pcard .nm { font-weight: 600; overflow-wrap: anywhere; }
+.pcard .mt { font-size: 0.8rem; color: var(--muted); }
+.pcard .bt, .badge { font-size: 0.72rem; font-weight: 600; color: var(--accent); background: var(--accent-soft); border-radius: 999px; padding: 0 8px; }
+.pcard.gone { border-style: dashed; }
+.tog { align-self: flex-start; border: 0; background: transparent; color: var(--accent); padding: 4px 2px; font-size: 0.85rem; font-weight: 500; }
+.kids { margin-left: 10px; padding-left: 12px; border-left: 2px solid var(--line); display: flex; flex-direction: column; gap: 12px; }
+
+.search { width: 100%; height: 46px; padding: 0 16px; border: 1px solid var(--line); border-radius: 23px; background: var(--surface); }
+.chips { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
+.chip { flex: 0 0 auto; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 4px 12px; font-size: 0.85rem; }
+.chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.list { display: flex; flex-direction: column; gap: 8px; }
+.prow { display: flex; align-items: center; justify-content: space-between; gap: 10px; text-align: left; width: 100%; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; }
+.prow .main { display: flex; flex-direction: column; min-width: 0; }
+.prow .nm { font-weight: 600; overflow-wrap: anywhere; }
+.prow .rl { font-size: 0.82rem; color: var(--muted); overflow-wrap: anywhere; }
+.prow .side { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex: 0 0 auto; font-size: 0.8rem; color: var(--muted); }
+.none { color: var(--muted); text-align: center; padding: 20px 0; }
+
+.more-row { display: flex; flex-direction: column; gap: 8px; }
+.more-row p { margin: 0; color: var(--muted); font-size: 0.9rem; }
+.help ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
+.notice { background: var(--warn-soft); color: var(--warn); border-radius: 12px; padding: 10px 12px; font-size: 0.9rem; }
+
+.btn { min-height: 44px; padding: 8px 16px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); font-weight: 500; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.danger { color: var(--danger); border-color: var(--danger); background: transparent; }
+.btn.small { min-height: 36px; padding: 4px 12px; font-size: 0.9rem; }
+.btn:disabled { opacity: 0.5; }
+
+.sheet { position: fixed; inset: 0; z-index: 20; background: rgba(8,20,14,0.5); display: flex; align-items: flex-end; justify-content: center; }
+.sheet-card {
+  width: 100%; max-width: 680px; max-height: 94dvh; overflow-y: auto; overscroll-behavior: contain;
+  background: var(--bg); border-radius: 22px 22px 0 0;
+  padding: 14px max(18px, env(safe-area-inset-right, 0px)) calc(20px + env(safe-area-inset-bottom, 0px)) max(18px, env(safe-area-inset-left, 0px));
+  display: flex; flex-direction: column; gap: 14px;
+}
+.sheet-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.sheet-head h2 { margin: 0; font-family: var(--font-display); font-size: 1.3rem; line-height: 1.25; overflow-wrap: anywhere; }
+.x { flex: 0 0 auto; width: 40px; height: 40px; border: 0; background: transparent; border-radius: 12px; display: grid; place-items: center; color: var(--muted); }
+.life { margin: 2px 0 0; color: var(--muted); font-size: 0.9rem; }
+.facts { display: flex; flex-direction: column; }
+.fact { display: flex; gap: 12px; justify-content: space-between; align-items: center; padding-block: 10px; border-top: 1px solid var(--line); }
+.fact:first-child { border-top: 0; }
+.fact .k { color: var(--muted); font-size: 0.88rem; flex: 0 0 auto; }
+.fact .v { text-align: right; min-width: 0; overflow-wrap: anywhere; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; align-items: center; }
+.rel { display: flex; flex-direction: column; gap: 6px; padding-block: 8px; border-top: 1px solid var(--line); }
+.rel:first-child { border-top: 0; }
+.rel .k { color: var(--muted); font-size: 0.88rem; }
+.rel .vs { display: flex; flex-wrap: wrap; gap: 6px; }
+.link { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 4px 12px; font-size: 0.92rem; color: var(--accent); font-weight: 500; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.a-link { color: var(--accent); font-weight: 600; text-decoration: none; }
+
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field > label, .field > .lab { font-weight: 500; font-size: 0.92rem; }
+.field input[type="text"], .field input[type="tel"], .field input[type="number"], .field input[type="date"], .field input[type="password"], .field select, .field textarea {
+  width: 100%; min-height: 46px; padding: 8px 12px;
+  border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--ink);
+}
+.field textarea { min-height: 80px; resize: vertical; }
+.hint { font-size: 0.8rem; color: var(--muted); }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.check { flex-direction: row; align-items: center; gap: 10px; }
+.check input { width: 22px; height: 22px; accent-color: var(--accent); flex: 0 0 auto; }
+.chips-sp { display: flex; flex-wrap: wrap; gap: 6px; }
+.sp-chip { display: inline-flex; align-items: center; gap: 6px; background: var(--accent-soft); border-radius: 999px; padding: 4px 6px 4px 12px; }
+.sp-chip button { border: 0; background: transparent; width: 24px; height: 24px; border-radius: 50%; color: var(--ink); font-size: 1rem; line-height: 1; }
+.form-err { margin: 0; color: var(--danger); font-size: 0.92rem; }
+.form-bar { display: flex; gap: 8px; flex-wrap: wrap; position: sticky; bottom: 0; background: var(--bg); padding-block: 10px 2px; }
+.form-bar .btn.primary { flex: 1 1 140px; }
+
+.lock { position: fixed; inset: 0; z-index: 40; background: var(--bg); display: flex; align-items: center; justify-content: center; padding: 24px; }
+.lock form { width: 100%; max-width: 320px; display: flex; flex-direction: column; gap: 12px; text-align: center; }
+.lock h2 { margin: 0; font-family: var(--font-display); }
+.lock input { text-align: center; letter-spacing: 0.4em; font-size: 1.4rem; min-height: 54px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--ink); }
+
+#login { position: fixed; inset: 0; z-index: 45; background: var(--bg); overflow-y: auto; display: flex; justify-content: center; padding: 24px 16px; }
+#login form { width: 100%; max-width: 360px; margin: auto; display: flex; flex-direction: column; gap: 10px; }
+#login h2 { margin: 0; font-family: var(--font-display); text-align: center; }
+#login input[type=text], #login input[type=password], #login input[type=number] { min-height: 48px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--ink); padding: 0 14px; font-size: 1rem; font-family: inherit; }
+#login .seg { display: flex; gap: 6px; }
+#login .seg button { flex: 1; min-height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; font-weight: 600; }
+#login .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+#login label.chk { display: flex; gap: 8px; align-items: center; font-size: 0.92rem; }
+#login .sub { margin: 0; text-align: center; color: var(--muted); font-size: 0.9rem; }
+#toast { position: fixed; left: 50%; transform: translateX(-50%); top: calc(12px + env(safe-area-inset-top, 0px)); z-index: 50; pointer-events: none; max-width: min(92vw, 420px); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 12px; font-size: 0.92rem; text-align: center; }
+@media (prefers-reduced-motion: no-preference) { #toast { animation: pop .18s ease-out; } }
+@keyframes pop { from { opacity: 0; transform: translate(-50%, -8px); } to { opacity: 1; transform: translate(-50%, 0); } }
+@media (max-width: 380px) { .two { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="bar">
+    <div>
+      <h1>കുടുംബ പുസ്തകം</h1>
+      <div id="count" class="count"></div>
+    </div>
+  </header>
+  <main id="view"></main>
+</div>
+
+<nav class="tabs" id="tabs" aria-label="Sections">
+  <div class="tabs-in">
+    <button type="button" data-tab="tree"></button>
+    <button type="button" data-tab="people"></button>
+    <button type="button" data-tab="more"></button>
+  </div>
+</nav>
+<button id="fab" class="fab" type="button" aria-label="Add person">
+  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+  <span id="fabLabel"></span>
+</button>
+
+<div id="sheet" class="sheet" hidden><div id="sheetCard" class="sheet-card" role="dialog" aria-modal="true"></div></div>
+
+<div id="lock" class="lock" hidden>
+  <form id="lockForm" autocomplete="off">
+    <h2>കുടുംബ പുസ്തകം</h2>
+    <p style="margin:0;color:var(--muted)">PIN നൽകുക</p>
+    <input id="pin" type="password" inputmode="numeric" maxlength="6" aria-label="PIN">
+    <p id="lockErr" class="form-err" role="alert"></p>
+    <button class="btn primary" type="submit">തുറക്കുക</button>
+  </form>
+</div>
+
+<input id="importFile" type="file" accept=".json,application/json" hidden>
+<div id="login" hidden>
+  <form id="loginForm" autocomplete="off">
+    <h2>കുടുംബ പുസ്തകം</h2>
+    <p class="sub" id="loginSub">കുടുംബ കോഡും പേരും നൽകുക</p>
+    <div class="seg"><button type="button" id="segM" aria-pressed="true">കുടുംബാംഗം</button><button type="button" id="segA" aria-pressed="false">അഡ്മിൻ</button></div>
+    <div id="memberBox" style="display:flex;flex-direction:column;gap:10px">
+      <input type="password" id="lgCode" placeholder="കുടുംബ കോഡ്" aria-label="Family code" autocomplete="off">
+      <input type="text" id="lgName" placeholder="നിങ്ങളുടെ പേര്" aria-label="Name" autocomplete="off">
+      <input type="password" id="lgPin" inputmode="numeric" maxlength="6" placeholder="PIN (4-6 അക്കം)" aria-label="PIN" autocomplete="off">
+      <label class="chk"><input type="checkbox" id="lgNew"> ആദ്യമായി വരുന്നു (പുതിയ PIN വെക്കുക)</label>
+    </div>
+    <div id="adminBox" hidden><input type="password" id="lgPass" placeholder="അഡ്മിൻ പാസ്‌വേഡ്" aria-label="Admin password" autocomplete="off" style="width:100%;box-sizing:border-box"></div>
+    <p id="loginErr" class="form-err" role="alert"></p>
+    <button class="btn primary" type="submit" id="loginBtn">കയറുക</button>
+  </form>
+</div>
+<div id="toast" hidden role="status"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  var KEY = 'familyBook.v1';
+  var PINKEY = 'familyBook.pin';
+  var state = { people: [] };
+  var net = { remote: true, admin: false, ready: false, token: '', name: '', written: {}, q: Promise.resolve(), members: [] };
+  var ui = { tab: 'tree', q: '', blood: '', collapsed: {}, reveal: {}, locked: false, hiddenAt: 0 };
+  var BLOODS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+
+  /* ---------- tiny helpers ---------- */
+  function $(s) { return document.querySelector(s); }
+  function uid() {
+    try { if (window.crypto && crypto.randomUUID) return crypto.randomUUID(); } catch (e) { /* ignore */ }
+    return 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 9);
+  }
+  function lsGet(k, d) { try { var v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } }
+
+  function add(el, c) {
+    if (c === null || c === undefined || c === false) return;
+    if (Array.isArray(c)) { c.forEach(function (x) { add(el, x); }); return; }
+    if (c.nodeType) { el.appendChild(c); return; }
+    el.appendChild(document.createTextNode(String(c)));
+  }
+  function h(tag, props) {
+    var el = document.createElement(tag);
+    if (props) {
+      Object.keys(props).forEach(function (k) {
+        var v = props[k];
+        if (v === null || v === undefined || v === false) return;
+        if (k === 'class') el.className = v;
+        else if (k === 'text') el.textContent = v;
+        else if (k.slice(0, 2) === 'on') el.addEventListener(k.slice(2), v);
+        else if (k === 'value') el.value = v;
+        else if (k === 'checked') el.checked = true;
+        else el.setAttribute(k, v === true ? '' : v);
+      });
+    }
+    for (var i = 2; i < arguments.length; i++) add(el, arguments[i]);
+    return el;
+  }
+  function T(ml, en) { return h('span', { class: 'bi' }, h('b', { text: ml }), en ? h('small', { text: en }) : null); }
+
+  var toastTimer = null;
+  function toast(msg) {
+    var t = $('#toast');
+    t.textContent = msg;
+    t.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.hidden = true; }, 2600);
+  }
+
+  /* ---------- data ---------- */
+  function clean(x) {
+    var s = function (v) { return typeof v === 'string' ? v : (v === null || v === undefined ? '' : String(v)); };
+    return {
+      id: s(x.id) || uid(),
+      _o: s(x._o),
+      _on: s(x._on),
+      _mine: x._mine !== false,
+      aadhaarLast4: s(x.aadhaarLast4).replace(/\D/g, '').slice(-4),
+      name: s(x.name).trim(),
+      gender: ['M', 'F', 'O'].indexOf(x.gender) >= 0 ? x.gender : '',
+      dob: /^\d{4}-\d{2}-\d{2}$/.test(s(x.dob)) ? x.dob : '',
+      dobYear: /^\d{4}$/.test(s(x.dobYear)) ? s(x.dobYear) : '',
+      dead: !!x.dead,
+      dod: /^\d{4}-\d{2}-\d{2}$/.test(s(x.dod)) ? x.dod : '',
+      phone: s(x.phone).trim(),
+      aadhaar: s(x.aadhaar).replace(/\D/g, '').slice(0, 12),
+      blood: BLOODS.indexOf(x.blood) >= 0 ? x.blood : '',
+      fatherId: s(x.fatherId),
+      motherId: s(x.motherId),
+      spouseIds: Array.isArray(x.spouseIds) ? x.spouseIds.filter(function (i) { return typeof i === 'string' && i; }) : [],
+      notes: s(x.notes),
+      createdAt: Number(x.createdAt) || Date.now(),
+      updatedAt: Number(x.updatedAt) || Date.now()
+    };
+  }
+  function load() {
+    try {
+      var raw = lsGet(KEY, '');
+      if (!raw) return;
+      var d = JSON.parse(raw);
+      if (d && Array.isArray(d.people)) {
+        state.people = d.people.filter(function (x) { return x && x.name; }).map(clean);
+      }
+    } catch (e) { state.people = []; }
+  }
+  function save() {
+    if (!net.ready) { toast('ഇപ്പോൾ സേവ് ചെയ്യാൻ കഴിയില്ല. കുറച്ച് കഴിഞ്ഞ് ശ്രമിക്കുക.'); return false; }
+    var changed = [], now = {}, del = [];
+    state.people.forEach(function (p) {
+      if (!mayEdit(p)) return;
+      var sp = strip(p), j = JSON.stringify(sp);
+      now[p.id] = 1;
+      if (net.written[p.id] !== j) { changed.push(sp); net.written[p.id] = j; }
+    });
+    if (net.admin) Object.keys(net.written).forEach(function (id) { if (!now[id] && !P(id)) { del.push(id); delete net.written[id]; } });
+    if (!changed.length && !del.length) return true;
+    net.q = net.q.then(function () {
+      var jobs = [];
+      if (changed.length) jobs.push(api('save', { people: changed }));
+      if (del.length) jobs.push(api('delete', { ids: del }));
+      return Promise.all(jobs);
+    }).catch(function (e) {
+      if (e && e.code === 401) return;
+      toast((e && e.message) || 'സേവ് ആയില്ല. ഇന്റർനെറ്റ് നോക്കുക.');
+      loadRemote();
+    });
+    return true;
+  }
+  function mayEdit(p) { return net.admin || p._mine !== false; }
+  function strip(p) {
+    var o = {};
+    Object.keys(p).forEach(function (k) { if (k.charAt(0) !== '_' && k !== 'aadhaarLast4') o[k] = p[k]; });
+    return o;
+  }
+  /* ---------- server ---------- */
+  var TOKKEY = 'familyBook.token';
+  function api(action, data) {
+    var body = Object.assign({ action: action, token: net.token }, data || {});
+    return fetch('/api/fb', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (j) {
+        if (r.ok) return j;
+        var err = new Error(j.message || 'തകരാറ്'); err.code = r.status; err.kind = j.error;
+        if (r.status === 401 && j.error === 'auth') { net.token = ''; lsSet(TOKKEY, ''); showLogin(''); }
+        throw err;
+      });
+    });
+  }
+  function applyRemote(list) {
+    var all = [], seen = {};
+    net.written = {};
+    list.forEach(function (x) {
+      if (!x || !x.name) return;
+      var c = clean(x);
+      if (seen[c.id]) return; seen[c.id] = 1;
+      if (mayEdit(c)) net.written[c.id] = JSON.stringify(strip(c));
+      all.push(c);
+    });
+    var byId = {};
+    all.forEach(function (p) { byId[p.id] = p; });
+    all.forEach(function (p) { p.spouseIds.forEach(function (sid) { var o = byId[sid]; if (o && o.spouseIds.indexOf(p.id) < 0) o.spouseIds.push(p.id); }); });
+    state.people = all;
+    net.ready = true;
+  }
+  function loadRemote(quiet) {
+    return api('list').then(function (j) {
+      net.admin = j.role === 'admin'; net.name = j.name || '';
+      applyRemote(j.people || []);
+      if (!ui.locked && (!quiet || $('#sheet').hidden)) render();
+    }).catch(function (e) {
+      if (!quiet) toast((e && e.message) || 'ഡാറ്റ എടുക്കാൻ കഴിഞ്ഞില്ല. ഇന്റർനെറ്റ് നോക്കുക.');
+    });
+  }
+  function showLogin(msg) {
+    $('#login').hidden = false; $('#app').hidden = true; $('#tabs').hidden = true; $('#fab').hidden = true;
+    $('#loginErr').textContent = msg || '';
+  }
+  function enterApp() {
+    $('#login').hidden = true; $('#app').hidden = false; $('#tabs').hidden = false;
+    net.ready = false;
+    return loadRemote().then(function () { if (pinSet() && canHash) lockNow(); });
+  }
+  var asAdmin = false;
+  function setSeg(a) {
+    asAdmin = a;
+    $('#segM').setAttribute('aria-pressed', a ? 'false' : 'true'); $('#segA').setAttribute('aria-pressed', a ? 'true' : 'false');
+    $('#memberBox').hidden = a; $('#adminBox').hidden = !a;
+    $('#loginErr').textContent = '';
+  }
+  $('#segM').addEventListener('click', function () { setSeg(false); });
+  $('#segA').addEventListener('click', function () { setSeg(true); });
+  $('#loginForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var btn = $('#loginBtn'); btn.disabled = true; $('#loginErr').textContent = '';
+    var data = asAdmin ? { role: 'admin', password: $('#lgPass').value }
+      : { role: 'member', code: $('#lgCode').value.trim(), name: $('#lgName').value, pin: $('#lgPin').value.trim(), create: $('#lgNew').checked };
+    net.token = '';
+    api('login', data).then(function (j) {
+      net.token = j.token; lsSet(TOKKEY, j.token);
+      $('#lgPin').value = ''; $('#lgPass').value = '';
+      return enterApp();
+    }).catch(function (err) { $('#loginErr').textContent = (err && err.message) || 'ലോഗിൻ പരാജയപ്പെട്ടു'; }).then(function () { btn.disabled = false; });
+  });
+  function logout() { net.token = ''; lsSet(TOKKEY, ''); state.people = []; net.ready = false; closeSheet(); showLogin(''); }
+  function initRemote() {
+    net.token = lsGet(TOKKEY, '');
+    if (!net.token) { showLogin(''); return; }
+    enterApp();
+  }
+  setInterval(function () { if (net.token && net.ready && !document.hidden && !ui.locked) loadRemote(true); }, 45000);
+  function P(id) {
+    if (!id) return null;
+    for (var i = 0; i < state.people.length; i++) if (state.people[i].id === id) return state.people[i];
+    return null;
+  }
+  function byName(a, b) { return (a.name || '').localeCompare(b.name || ''); }
+  function sortKey(p) { return p.dob ? p.dob : (p.dobYear ? p.dobYear + '-00-00' : '9999'); }
+  function byBirth(a, b) { var x = sortKey(a), y = sortKey(b); return x < y ? -1 : (x > y ? 1 : byName(a, b)); }
+  function descendants(id) {
+    var out = {};
+    (function walk(x) {
+      state.people.forEach(function (c) {
+        if ((c.fatherId === x || c.motherId === x) && !out[c.id]) { out[c.id] = 1; walk(c.id); }
+      });
+    })(id);
+    return out;
+  }
+  function addSpouse(a, bId) { if (a.spouseIds.indexOf(bId) < 0) a.spouseIds.push(bId); }
+  function linkParents(child) {
+    var fa = P(child.fatherId), mo = P(child.motherId);
+    if (fa && mo) { addSpouse(fa, mo.id); addSpouse(mo, fa.id); }
+  }
+
+  /* ---------- dates, ages ---------- */
+  function fmtDate(iso) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
+    return m ? m[3] + '/' + m[2] + '/' + m[1] : '';
+  }
+  function birthYear(p) { return p.dob ? +p.dob.slice(0, 4) : (p.dobYear ? +p.dobYear : null); }
+  function deathYear(p) { return p.dod ? +p.dod.slice(0, 4) : null; }
+  function ageOf(p) {
+    var by = birthYear(p);
+    if (!by) return null;
+    if (p.dead && !p.dod) return null;
+    var end = p.dead ? new Date(p.dod + 'T00:00:00') : new Date();
+    var a = end.getFullYear() - by;
+    if (p.dob) {
+      var b = new Date(p.dob + 'T00:00:00');
+      var md = (end.getMonth() - b.getMonth()) || (end.getDate() - b.getDate());
+      if (md < 0) a--;
+    }
+    return a < 0 ? null : a;
+  }
+  function metaLine(p) {
+    if (p.dead) {
+      var by = birthYear(p), dy = deathYear(p);
+      return (by || '?') + ' – ' + (dy || '?');
+    }
+    var a = ageOf(p);
+    return a === null ? '' : a + ' വയസ്സ്';
+  }
+  function fmtAadhaar(d) { return String(d || '').replace(/\D/g, '').replace(/(\d{4})(?=\d)/g, '$1 '); }
+  function maskAadhaar(d) { d = String(d || ''); return d.length === 12 ? '•••• •••• ' + d.slice(8) : d; }
+
+  function upcomingBirthdays() {
+    var now = new Date();
+    var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    var out = [];
+    state.people.forEach(function (p) {
+      if (p.dead || !p.dob) return;
+      var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(p.dob);
+      if (!m) return;
+      var mo = +m[2] - 1, d = +m[3];
+      var nx = new Date(today.getFullYear(), mo, d);
+      if (nx < today) nx = new Date(today.getFullYear() + 1, mo, d);
+      var days = Math.round((nx - today) / 86400000);
+      if (days <= 45) out.push({ p: p, days: days, turning: nx.getFullYear() - (+m[1]) });
+    });
+    out.sort(function (a, b) { return a.days - b.days; });
+    return out.slice(0, 5);
+  }
+
+  /* ---------- sheet ---------- */
+  function showSheet(nodes) {
+    var card = $('#sheetCard');
+    card.textContent = '';
+    add(card, nodes);
+    $('#sheet').hidden = false;
+    card.scrollTop = 0;
+  }
+  function closeSheet() { $('#sheet').hidden = true; $('#sheetCard').textContent = ''; ui.reveal = {}; }
+  function askSheet(msg, yesLabel, onYes, onNo) {
+    showSheet([
+      h('div', { class: 'sheet-head' }, h('h2', { text: 'ഉറപ്പാണോ?' }), closeBtn()),
+      h('p', { text: msg }),
+      h('div', { class: 'form-bar' },
+        h('button', { class: 'btn danger', type: 'button', onclick: onYes }, yesLabel),
+        h('button', { class: 'btn', type: 'button', onclick: onNo || closeSheet }, T('വേണ്ട', 'No')))
+    ]);
+  }
+  function closeBtn() {
+    return h('button', { class: 'x', type: 'button', 'aria-label': 'Close', onclick: closeSheet },
+      h('span', { 'aria-hidden': 'true', text: '✕' }));
+  }
+
+  function copyText(t, label) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(t).then(function () { toast(label + ' കോപ്പി ചെയ്തു'); }, function () { toast('ഇവിടെ കോപ്പി അനുവദനീയമല്ല'); });
+    } else { toast('ഇവിടെ കോപ്പി അനുവദനീയമല്ല'); }
+  }
+
+  /* ---------- detail ---------- */
+  function relLinks(list) {
+    return list.map(function (x) { return h('button', { class: 'link', type: 'button', onclick: function () { openDetail(x.id); } }, x.name); });
+  }
+  function rel(labelNode, list) {
+    if (!list.length) return null;
+    return h('div', { class: 'rel' }, h('span', { class: 'k' }, labelNode), h('div', { class: 'vs' }, relLinks(list)));
+  }
+  function fact(labelNode, valueNodes) {
+    return h('div', { class: 'fact' }, h('span', { class: 'k' }, labelNode), h('span', { class: 'v' }, valueNodes));
+  }
+
+  function openDetail(id) {
+    var p = P(id);
+    if (!p) { closeSheet(); return; }
+    var father = P(p.fatherId), mother = P(p.motherId);
+    var spouses = p.spouseIds.map(P).filter(Boolean);
+    var children = state.people.filter(function (x) { return x.fatherId === p.id || x.motherId === p.id; }).sort(byBirth);
+    var sibs = state.people.filter(function (x) {
+      return x.id !== p.id && ((p.fatherId && x.fatherId === p.fatherId) || (p.motherId && x.motherId === p.motherId));
+    }).sort(byBirth);
+
+    var life = [];
+    if (p.dob) life.push(fmtDate(p.dob)); else if (p.dobYear) life.push(p.dobYear);
+    if (p.dead) life.push('മരണം ' + (p.dod ? fmtDate(p.dod) : '(തീയതി അറിയില്ല)'));
+    var ml = metaLine(p);
+    if (ml && !p.dead) life.push(ml);
+
+    var facts = [];
+    if (p.phone) {
+      var tel = p.phone.replace(/[^\d+]/g, '');
+      facts.push(fact(T('ഫോൺ', 'Phone'), [
+        h('span', { text: p.phone }),
+        h('a', { class: 'a-link', href: 'tel:' + tel }, T('വിളിക്കുക', 'Call')),
+        h('button', { class: 'btn small', type: 'button', onclick: function () { copyText(p.phone, 'നമ്പർ'); } }, T('കോപ്പി', 'Copy'))
+      ]));
+    }
+    if (!p.aadhaar && p.aadhaarLast4) {
+      facts.push(fact(T('ആധാർ', 'Aadhaar'), [h('span', { text: '•••• •••• ' + p.aadhaarLast4 })]));
+    }
+    if (p.aadhaar) {
+      var shown = !!ui.reveal[p.id];
+      facts.push(fact(T('ആധാർ', 'Aadhaar'), [
+        h('span', { text: shown ? fmtAadhaar(p.aadhaar) : maskAadhaar(p.aadhaar) }),
+        h('button', { class: 'btn small', type: 'button', onclick: function () { ui.reveal[p.id] = !shown; openDetail(p.id); } }, shown ? T('മറയ്ക്കുക', 'Hide') : T('കാണിക്കുക', 'Show')),
+        shown ? h('button', { class: 'btn small', type: 'button', onclick: function () { copyText(p.aadhaar, 'ആധാർ'); } }, T('കോപ്പി', 'Copy')) : null
+      ]));
+    }
+    if (net.admin && p._on && p._o !== 'admin') facts.push(fact(T('ചേർത്തത്', 'Added by'), [h('span', { text: p._on })]));
+    if (p.blood) facts.push(fact(T('രക്തഗ്രൂപ്പ്', 'Blood group'), [h('span', { class: 'badge', text: p.blood })]));
+    if (p.gender) facts.push(fact(T('ലിംഗം', 'Gender'), [h('span', { text: p.gender === 'M' ? 'പുരുഷൻ' : (p.gender === 'F' ? 'സ്ത്രീ' : 'മറ്റുള്ളവ') })]));
+    if (p.notes) facts.push(fact(T('കുറിപ്പ്', 'Notes'), [h('span', { text: p.notes })]));
+
+    var rels = [
+      rel(T('അച്ഛൻ', 'Father'), father ? [father] : []),
+      rel(T('അമ്മ', 'Mother'), mother ? [mother] : []),
+      rel(T('ജീവിതപങ്കാളി', 'Spouse'), spouses),
+      rel(T('മക്കൾ', 'Children'), children),
+      rel(T('സഹോദരങ്ങൾ', 'Siblings'), sibs)
+    ].filter(Boolean);
+
+    var actions = [
+      mayEdit(p) ? h('button', { class: 'btn primary', type: 'button', onclick: function () { openForm({ id: p.id }); } }, T('എഡിറ്റ്', 'Edit')) : null,
+      h('button', { class: 'btn', type: 'button', onclick: function () { openForm({ prefill: childPrefill(p) }); } }, T('കുട്ടിയെ ചേർക്കുക', 'Add child')),
+      h('button', { class: 'btn', type: 'button', onclick: function () { openForm({ prefill: { spouseIds: [p.id], gender: p.gender === 'M' ? 'F' : (p.gender === 'F' ? 'M' : '') } }); } }, T('പങ്കാളിയെ ചേർക്കുക', 'Add spouse'))
+    ];
+    if (!father && mayEdit(p)) actions.push(h('button', { class: 'btn', type: 'button', onclick: function () { openForm({ prefill: { gender: 'M' }, childOf: { id: p.id, role: 'father' } }); } }, T('അച്ഛനെ ചേർക്കുക', 'Add father')));
+    if (!mother && mayEdit(p)) actions.push(h('button', { class: 'btn', type: 'button', onclick: function () { openForm({ prefill: { gender: 'F' }, childOf: { id: p.id, role: 'mother' } }); } }, T('അമ്മയെ ചേർക്കുക', 'Add mother')));
+
+    showSheet([
+      h('div', { class: 'sheet-head' },
+        h('div', null, h('h2', { text: p.name }), life.length ? h('p', { class: 'life', text: life.join(' · ') }) : null),
+        closeBtn()),
+      rels.length ? h('div', { class: 'card' }, rels) : null,
+      facts.length ? h('div', { class: 'card facts' }, facts) : null,
+      h('div', { class: 'actions' }, actions)
+    ]);
+  }
+
+  function childPrefill(par) {
+    var sp = P(par.spouseIds[0]);
+    var f = {};
+    if (par.gender === 'F') { f.motherId = par.id; f.fatherId = sp ? sp.id : ''; }
+    else { f.fatherId = par.id; f.motherId = sp ? sp.id : ''; }
+    return f;
+  }
+
+  /* ---------- form ---------- */
+  function personSelect(id, selected, excluded, placeholder) {
+    var sel = h('select', { id: id });
+    sel.appendChild(h('option', { value: '', text: placeholder }));
+    state.people.slice().sort(byName).forEach(function (x) {
+      if (excluded[x.id]) return;
+      var y = birthYear(x);
+      sel.appendChild(h('option', { value: x.id, text: x.name + (y ? ' (' + y + ')' : '') }));
+    });
+    sel.value = selected || '';
+    return sel;
+  }
+  function field(labelNode, input, hint) {
+    return h('div', { class: 'field' }, h('label', { for: input.id }, labelNode), input, hint ? h('span', { class: 'hint', text: hint }) : null);
+  }
+
+  function openForm(ctx) {
+    ctx = ctx || {};
+    var editing = ctx.id ? P(ctx.id) : null;
+    var base = editing
+      ? JSON.parse(JSON.stringify(editing))
+      : Object.assign({ name: '', gender: '', dob: '', dobYear: '', dead: false, dod: '', phone: '', aadhaar: '', blood: '', fatherId: '', motherId: '', spouseIds: [], notes: '' }, ctx.prefill || {});
+    var spouses = (base.spouseIds || []).slice();
+    var excluded = {};
+    if (editing) { excluded = descendants(editing.id); excluded[editing.id] = 1; }
+
+    var fName = h('input', { id: 'f-name', type: 'text', value: base.name, autocomplete: 'off', autocapitalize: 'words' });
+    var fGender = h('select', { id: 'f-gender' },
+      h('option', { value: '', text: '—' }),
+      h('option', { value: 'M', text: 'പുരുഷൻ (Male)' }),
+      h('option', { value: 'F', text: 'സ്ത്രീ (Female)' }),
+      h('option', { value: 'O', text: 'മറ്റുള്ളവ (Other)' }));
+    fGender.value = base.gender || '';
+    var fBlood = h('select', { id: 'f-blood' }, h('option', { value: '', text: 'അറിയില്ല' }));
+    BLOODS.forEach(function (b) { fBlood.appendChild(h('option', { value: b, text: b })); });
+    fBlood.value = base.blood || '';
+    var fDob = h('input', { id: 'f-dob', type: 'date', value: base.dob });
+    var fDobY = h('input', { id: 'f-doby', type: 'number', inputmode: 'numeric', min: '1800', max: '2100', placeholder: 'ഉദാ: 1948', value: base.dobYear });
+    var fDead = h('input', { id: 'f-dead', type: 'checkbox', checked: base.dead });
+    var fDod = h('input', { id: 'f-dod', type: 'date', value: base.dod });
+    var dodField = field(T('മരണ തീയതി', 'Date of death'), fDod);
+    dodField.hidden = !base.dead;
+    fDead.addEventListener('change', function () { dodField.hidden = !fDead.checked; });
+    var fPhone = h('input', { id: 'f-phone', type: 'tel', inputmode: 'tel', value: base.phone, autocomplete: 'off' });
+    var fAadhaar = h('input', {
+      id: 'f-aadhaar', type: 'text', inputmode: 'numeric', maxlength: '14', placeholder: 'XXXX XXXX XXXX',
+      value: fmtAadhaar(base.aadhaar), autocomplete: 'off',
+      oninput: function (e) { e.target.value = fmtAadhaar(e.target.value.replace(/\D/g, '').slice(0, 12)); }
+    });
+    var fFather = personSelect('f-father', base.fatherId, excluded, '— അറിയില്ല / ചേർത്തിട്ടില്ല —');
+    var fMother = personSelect('f-mother', base.motherId, excluded, '— അറിയില്ല / ചേർത്തിട്ടില്ല —');
+    var fNotes = h('textarea', { id: 'f-notes', text: base.notes || '' });
+    var err = h('p', { class: 'form-err', role: 'alert' });
+
+    var chips = h('div', { class: 'chips-sp' });
+    var spExcluded = {};
+    if (editing) spExcluded[editing.id] = 1;
+    var spSelect = h('select', { id: 'f-spouse' });
+    function fillSpouse() {
+      spSelect.textContent = '';
+      spSelect.appendChild(h('option', { value: '', text: '+ പങ്കാളിയെ തിരഞ്ഞെടുക്കുക' }));
+      state.people.slice().sort(byName).forEach(function (x) {
+        if (spExcluded[x.id] || spouses.indexOf(x.id) >= 0) return;
+        var y = birthYear(x);
+        spSelect.appendChild(h('option', { value: x.id, text: x.name + (y ? ' (' + y + ')' : '') }));
+      });
+      spSelect.value = '';
+    }
+    function fillChips() {
+      chips.textContent = '';
+      spouses.forEach(function (sid) {
+        var sp = P(sid);
+        if (!sp) return;
+        chips.appendChild(h('span', { class: 'sp-chip' }, sp.name,
+          h('button', { type: 'button', 'aria-label': 'Remove ' + sp.name, onclick: function () { spouses = spouses.filter(function (i) { return i !== sid; }); fillChips(); fillSpouse(); } }, '✕')));
+      });
+    }
+    spSelect.addEventListener('change', function () {
+      if (spSelect.value && spouses.indexOf(spSelect.value) < 0) spouses.push(spSelect.value);
+      fillChips(); fillSpouse();
+    });
+    fillChips(); fillSpouse();
+
+    function onSave() {
+      err.textContent = '';
+      var name = fName.value.trim();
+      if (!name) { err.textContent = 'പേര് നൽകണം (Name is required).'; fName.focus(); return; }
+      var aad = fAadhaar.value.replace(/\D/g, '');
+      if (aad && aad.length !== 12) { err.textContent = 'ആധാർ നമ്പർ 12 അക്കം ആയിരിക്കണം.'; fAadhaar.focus(); return; }
+      var phoneDigits = fPhone.value.replace(/\D/g, '');
+      if (fPhone.value.trim() && phoneDigits.length < 8) { err.textContent = 'ഫോൺ നമ്പർ ഒന്നുകൂടി നോക്കുക.'; fPhone.focus(); return; }
+      var today = new Date().toISOString().slice(0, 10);
+      if (fDob.value && fDob.value > today) { err.textContent = 'ജനന തീയതി ഭാവിയിൽ ആകരുത്.'; fDob.focus(); return; }
+      if (fDead.checked && fDod.value && fDob.value && fDod.value < fDob.value) { err.textContent = 'മരണ തീയതി ജനന തീയതിക്ക് മുമ്പാകരുത്.'; fDod.focus(); return; }
+      if (fFather.value && fFather.value === fMother.value) { err.textContent = 'അച്ഛനും അമ്മയും ഒരേ ആൾ ആകരുത്.'; return; }
+
+      var now = Date.now();
+      var rec = clean({
+        id: editing ? editing.id : uid(),
+        name: name, gender: fGender.value, dob: fDob.value, dobYear: fDob.value ? '' : fDobY.value,
+        dead: fDead.checked, dod: fDead.checked ? fDod.value : '',
+        phone: fPhone.value, aadhaar: aad, blood: fBlood.value,
+        fatherId: fFather.value, motherId: fMother.value, spouseIds: spouses,
+        notes: fNotes.value.trim(),
+        createdAt: editing ? editing.createdAt : now, updatedAt: now,
+        _o: editing ? editing._o : '', _on: editing ? editing._on : '', _mine: editing ? editing._mine : true
+      });
+      if (editing) state.people[state.people.indexOf(editing)] = rec; else state.people.push(rec);
+
+      state.people.forEach(function (x) {
+        if (x.id === rec.id || !mayEdit(x)) return;
+        var has = x.spouseIds.indexOf(rec.id) >= 0;
+        var should = rec.spouseIds.indexOf(x.id) >= 0;
+        if (should && !has) x.spouseIds.push(rec.id);
+        if (!should && has) x.spouseIds = x.spouseIds.filter(function (i) { return i !== rec.id; });
+      });
+      linkParents(rec);
+      if (ctx.childOf) {
+        var ch = P(ctx.childOf.id);
+        if (ch && mayEdit(ch)) { ch[ctx.childOf.role === 'father' ? 'fatherId' : 'motherId'] = rec.id; ch.updatedAt = now; linkParents(ch); }
+      }
+      if (save()) {
+        render();
+        openDetail(rec.id);
+        toast('സേവ് ചെയ്തു');
+      }
+    }
+
+    function onDelete() {
+      if (!editing) return;
+      var who = editing;
+      askSheet('"' + who.name + '" എന്ന അംഗത്തെ ഡിലീറ്റ് ചെയ്യട്ടെ? ഇത് തിരിച്ചെടുക്കാൻ കഴിയില്ല.', T('ഡിലീറ്റ്', 'Delete'), function () { doDelete(who.id); }, function () { openDetail(who.id); });
+    }
+    function doDelete(id) {
+      state.people = state.people.filter(function (x) { return x.id !== id; });
+      state.people.forEach(function (x) {
+        if (x.fatherId === id) x.fatherId = '';
+        if (x.motherId === id) x.motherId = '';
+        x.spouseIds = x.spouseIds.filter(function (i) { return i !== id; });
+      });
+      save();
+      closeSheet();
+      render();
+      toast('ഡിലീറ്റ് ചെയ്തു');
+    }
+
+    var title = editing ? 'വിവരങ്ങൾ എഡിറ്റ് ചെയ്യുക' : 'പുതിയ അംഗം';
+    var sub = null;
+    if (ctx.childOf) { var c = P(ctx.childOf.id); if (c) sub = (ctx.childOf.role === 'father' ? 'അച്ഛൻ: ' : 'അമ്മ: ') + c.name + ' ന്റെ'; }
+    else if (!editing && base.spouseIds && base.spouseIds.length) { var sp0 = P(base.spouseIds[0]); if (sp0) sub = sp0.name + ' ന്റെ പങ്കാളി'; }
+    else if (!editing && (base.fatherId || base.motherId)) { var par = P(base.fatherId) || P(base.motherId); if (par) sub = par.name + ' ന്റെ കുട്ടി'; }
+
+    showSheet([
+      h('div', { class: 'sheet-head' }, h('div', null, h('h2', { text: title }), sub ? h('p', { class: 'life', text: sub }) : null), closeBtn()),
+      field(T('പേര്', 'Name'), fName),
+      h('div', { class: 'two' }, field(T('ലിംഗം', 'Gender'), fGender), field(T('രക്തഗ്രൂപ്പ്', 'Blood group'), fBlood)),
+      h('div', { class: 'two' },
+        field(T('ജനന തീയതി', 'Date of birth'), fDob),
+        field(T('ജനന വർഷം', 'Birth year'), fDobY, 'തീയതി അറിയില്ലെങ്കിൽ മാത്രം')),
+      h('div', { class: 'field check' }, fDead, h('label', { for: 'f-dead' }, T('മരണപ്പെട്ടു', 'Passed away'))),
+      dodField,
+      field(T('ഫോൺ നമ്പർ', 'Phone'), fPhone),
+      field(T('ആധാർ നമ്പർ', 'Aadhaar'), fAadhaar, 'അഡ്മിനും നിങ്ങൾക്കും മാത്രം പൂർണ്ണ നമ്പർ കാണാം. മറ്റുള്ളവർക്ക് അവസാന 4 അക്കം മാത്രം.'),
+      field(T('അച്ഛൻ', 'Father'), fFather),
+      field(T('അമ്മ', 'Mother'), fMother),
+      h('div', { class: 'field' }, h('span', { class: 'lab' }, T('ഭാര്യ / ഭർത്താവ്', 'Spouse')), chips, h('label', { for: 'f-spouse', class: 'hint' }, 'ഒന്നിലധികം പേരെ ചേർക്കാം'), spSelect),
+      field(T('കുറിപ്പുകൾ', 'Notes'), fNotes),
+      err,
+      h('div', { class: 'form-bar' },
+        h('button', { class: 'btn primary', type: 'button', onclick: onSave }, T('സേവ് ചെയ്യുക', 'Save')),
+        h('button', { class: 'btn', type: 'button', onclick: function () { if (editing) openDetail(editing.id); else closeSheet(); } }, T('റദ്ദാക്കുക', 'Cancel')),
+        (editing && (!net.remote || net.admin)) ? h('button', { class: 'btn danger', type: 'button', onclick: onDelete }, T('ഡിലീറ്റ്', 'Delete')) : null)
+    ]);
+    setTimeout(function () { try { fName.focus(); } catch (e) { /* ignore */ } }, 60);
+  }
+
+  /* ---------- tree view ---------- */
+  function personCard(p) {
+    return h('button', { class: 'pcard' + (p.dead ? ' gone' : ''), type: 'button', onclick: function () { openDetail(p.id); } },
+      h('span', { class: 'nm', text: p.name }),
+      metaLine(p) ? h('span', { class: 'mt', text: metaLine(p) }) : null,
+      p.blood ? h('span', { class: 'bt', text: p.blood }) : null);
+  }
+
+  function renderUnit(p, visited) {
+    var members = [p];
+    visited[p.id] = 1;
+    p.spouseIds.forEach(function (sid) {
+      var s = P(sid);
+      if (s && !visited[s.id]) { visited[s.id] = 1; members.push(s); }
+    });
+    var kids = state.people.filter(function (x) {
+      return !visited[x.id] && members.some(function (m) { return x.fatherId === m.id || x.motherId === m.id; });
+    }).sort(byBirth);
+
+    var node = h('div', { class: 'node' });
+    var row = h('div', { class: 'unit' });
+    members.forEach(function (m, i) {
+      if (i) row.appendChild(h('span', { class: 'amp', 'aria-hidden': 'true', text: '+' }));
+      row.appendChild(personCard(m));
+    });
+    node.appendChild(row);
+    if (kids.length) {
+      var closed = !!ui.collapsed[p.id];
+      node.appendChild(h('button', {
+        class: 'tog', type: 'button', 'aria-expanded': closed ? 'false' : 'true',
+        onclick: function () { ui.collapsed[p.id] = !closed; render(); }
+      }, (closed ? '▸ ' : '▾ ') + kids.length + ' മക്കൾ'));
+      if (!closed) {
+        var wrap = h('div', { class: 'kids' });
+        kids.forEach(function (k) { if (!visited[k.id]) wrap.appendChild(renderUnit(k, visited)); });
+        node.appendChild(wrap);
+      }
+    }
+    return node;
+  }
+
+  function emptyState() {
+    return h('div', { class: 'empty' },
+      h('h2', { text: 'കുടുംബത്തിൽ നിന്ന് തുടങ്ങാം' }),
+      h('p', { text: 'നിങ്ങൾക്ക് അറിയാവുന്ന ഏറ്റവും മുതിർന്ന ആളെ ആദ്യം ചേർക്കുക. പിന്നീട് അവരുടെ പേജിൽ നിന്ന് പങ്കാളി, മക്കൾ, മാതാപിതാക്കൾ എന്നിവരെ ഓരോന്നായി ചേർക്കാം.' }),
+      h('button', { class: 'btn primary', type: 'button', onclick: function () { openForm({}); } }, T('ആദ്യത്തെ അംഗത്തെ ചേർക്കുക', 'Add first person')),
+      h('p', { class: 'hint', text: 'എല്ലാ വിവരങ്ങളും ഈ ഫോണിൽ മാത്രം സൂക്ഷിക്കുന്നു.' }));
+  }
+
+  function viewTree() {
+    var wrap = h('div', { class: 'view' });
+    if (!state.people.length) { wrap.appendChild(emptyState()); return wrap; }
+    var bd = upcomingBirthdays();
+    if (bd.length) {
+      var card = h('div', { class: 'card' }, h('h2', null, T('വരുന്ന ജന്മദിനങ്ങൾ', 'Upcoming birthdays')));
+      bd.forEach(function (b) {
+        card.appendChild(h('div', { class: 'bday' },
+          h('button', { class: 'link', type: 'button', onclick: function () { openDetail(b.p.id); } }, b.p.name),
+          h('span', { text: (b.days === 0 ? 'ഇന്ന്' : (b.days === 1 ? 'നാളെ' : b.days + ' ദിവസം കഴിഞ്ഞ്')) + ' · ' + b.turning + ' വയസ്സ്' })));
+      });
+      wrap.appendChild(card);
+    }
+    var visited = {};
+    var hasParent = function (p) { return !!(P(p.fatherId) || P(p.motherId)); };
+    var roots = state.people.filter(function (p) {
+      return !hasParent(p) && !p.spouseIds.some(function (s) { var sp = P(s); return sp && hasParent(sp); });
+    }).sort(byBirth);
+    var tree = h('div', { class: 'tree' });
+    roots.forEach(function (r) { if (!visited[r.id]) tree.appendChild(renderUnit(r, visited)); });
+    state.people.slice().sort(byBirth).forEach(function (p) { if (!visited[p.id]) tree.appendChild(renderUnit(p, visited)); });
+    wrap.appendChild(tree);
+    return wrap;
+  }
+
+  /* ---------- people view ---------- */
+  function relationLine(p) {
+    var parts = [];
+    var f = P(p.fatherId), m = P(p.motherId);
+    if (f) parts.push('അച്ഛൻ: ' + f.name);
+    if (m) parts.push('അമ്മ: ' + m.name);
+    var sp = p.spouseIds.map(P).filter(Boolean);
+    if (sp.length) parts.push('പങ്കാളി: ' + sp.map(function (s) { return s.name; }).join(', '));
+    return parts.join(' · ');
+  }
+
+  function viewPeople() {
+    var wrap = h('div', { class: 'view' });
+    var list = h('div', { class: 'list' });
+    var chipRow = h('div', { class: 'chips' });
+
+    function fillChips() {
+      chipRow.textContent = '';
+      var present = BLOODS.filter(function (b) { return state.people.some(function (p) { return p.blood === b; }); });
+      if (!present.length) return;
+      chipRow.appendChild(h('button', { class: 'chip', type: 'button', 'aria-pressed': ui.blood ? 'false' : 'true', onclick: function () { ui.blood = ''; fillChips(); fillList(); } }, 'എല്ലാവരും'));
+      present.forEach(function (b) {
+        chipRow.appendChild(h('button', { class: 'chip', type: 'button', 'aria-pressed': ui.blood === b ? 'true' : 'false', onclick: function () { ui.blood = ui.blood === b ? '' : b; fillChips(); fillList(); } }, b));
+      });
+    }
+    function fillList() {
+      list.textContent = '';
+      var q = ui.q.trim().toLowerCase();
+      var qd = q.replace(/\D/g, '');
+      var res = state.people.filter(function (p) {
+        if (ui.blood && p.blood !== ui.blood) return false;
+        if (!q) return true;
+        return p.name.toLowerCase().indexOf(q) >= 0 || p.blood.toLowerCase() === q || (qd.length >= 3 && p.phone.replace(/\D/g, '').indexOf(qd) >= 0);
+      }).sort(byName);
+      if (!res.length) { list.appendChild(h('p', { class: 'none', text: state.people.length ? 'ആരെയും കണ്ടില്ല' : 'ഇതുവരെ ആരെയും ചേർത്തിട്ടില്ല' })); return; }
+      res.forEach(function (p) {
+        list.appendChild(h('button', { class: 'prow', type: 'button', onclick: function () { openDetail(p.id); } },
+          h('span', { class: 'main' }, h('span', { class: 'nm', text: p.name }), relationLine(p) ? h('span', { class: 'rl', text: relationLine(p) }) : null),
+          h('span', { class: 'side' }, p.blood ? h('span', { class: 'badge', text: p.blood }) : null, metaLine(p) ? h('span', { text: metaLine(p) }) : null)));
+      });
+    }
+
+    wrap.appendChild(h('input', {
+      class: 'search', type: 'search', placeholder: 'പേര്, ഫോൺ, രക്തഗ്രൂപ്പ് തിരയുക', value: ui.q, 'aria-label': 'Search',
+      oninput: function (e) { ui.q = e.target.value; fillList(); }
+    }));
+    wrap.appendChild(chipRow);
+    wrap.appendChild(list);
+    fillChips();
+    fillList();
+    return wrap;
+  }
+
+  /* ---------- backup, restore, export ---------- */
+  function download(name, mime, text) {
+    if (window.claude && claude.use) {
+      claude.use('downloads').then(function (dl) {
+        if (!dl) return plainDownload(name, mime, text);
+        return dl.save({ filename: name, data: text }).then(function () { toast('ഫയൽ സേവ് ചെയ്തു'); }, function (e) { if (!e || e.code !== 'declined') toast('ഡൗൺലോഡ് നടന്നില്ല'); });
+      }, function () { plainDownload(name, mime, text); });
+      return;
+    }
+    plainDownload(name, mime, text);
+  }
+  function plainDownload(name, mime, text) {
+    var blob = new Blob([text], { type: mime });
+    var url = URL.createObjectURL(blob);
+    var a = h('a', { href: url, download: name });
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(url); a.remove(); }, 1500);
+  }
+  function stamp() { return new Date().toISOString().slice(0, 10); }
+
+  function exportJson() {
+    if (!state.people.length) { toast('ബാക്കപ്പ് എടുക്കാൻ ഡാറ്റ ഒന്നുമില്ല'); return; }
+    download('family-book-' + stamp() + '.json', 'application/json', JSON.stringify({ v: 1, exportedAt: new Date().toISOString(), people: state.people }, null, 2));
+    toast('ബാക്കപ്പ് ഫയൽ ഡൗൺലോഡ് ആയി');
+  }
+  function csvCell(v) {
+    v = String(v === null || v === undefined ? '' : v);
+    return /[",\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+  }
+  function exportCsv() {
+    if (!state.people.length) { toast('ഡാറ്റ ഒന്നുമില്ല'); return; }
+    var rows = [['Name', 'Gender', 'Date of birth', 'Birth year', 'Passed away', 'Date of death', 'Phone', 'Aadhaar', 'Blood group', 'Father', 'Mother', 'Spouses', 'Notes']];
+    state.people.slice().sort(byName).forEach(function (p) {
+      var f = P(p.fatherId), m = P(p.motherId);
+      rows.push([p.name, p.gender, fmtDate(p.dob), p.dobYear, p.dead ? 'Yes' : '', fmtDate(p.dod), p.phone, fmtAadhaar(p.aadhaar), p.blood, f ? f.name : '', m ? m.name : '', p.spouseIds.map(P).filter(Boolean).map(function (s) { return s.name; }).join('; '), p.notes]);
+    });
+    download('family-book-' + stamp() + '.csv', 'text/csv;charset=utf-8', '﻿' + rows.map(function (r) { return r.map(csvCell).join(','); }).join('\r\n'));
+    toast('Excel (CSV) ഫയൽ ഡൗൺലോഡ് ആയി');
+  }
+  function importFile(file) {
+    var r = new FileReader();
+    r.onload = function () {
+      try {
+        var d = JSON.parse(r.result);
+        if (!d || !Array.isArray(d.people)) throw new Error('bad');
+        var added = 0, updated = 0;
+        d.people.forEach(function (x) {
+          if (!x || !x.id || !x.name) return;
+          var c = clean(x);
+          var cur = P(c.id);
+          if (!cur) { state.people.push(c); added++; }
+          else if ((c.updatedAt || 0) > (cur.updatedAt || 0)) { state.people[state.people.indexOf(cur)] = c; updated++; }
+        });
+        save();
+        render();
+        toast(added + ' പുതിയത്, ' + updated + ' പുതുക്കിയത്');
+      } catch (e) { toast('ഈ ഫയൽ ശരിയായ ബാക്കപ്പ് അല്ല'); }
+    };
+    r.onerror = function () { toast('ഫയൽ വായിക്കാൻ കഴിഞ്ഞില്ല'); };
+    r.readAsText(file);
+  }
+
+  /* ---------- PIN lock ---------- */
+  var canHash = !!(window.crypto && crypto.subtle && window.TextEncoder);
+  function sha(s) {
+    return crypto.subtle.digest('SHA-256', new TextEncoder().encode('familybook:' + s)).then(function (buf) {
+      return Array.prototype.map.call(new Uint8Array(buf), function (b) { return ('0' + b.toString(16)).slice(-2); }).join('');
+    });
+  }
+  function pinSet() { return !!lsGet(PINKEY, ''); }
+  function lockNow() {
+    if (!pinSet() || !canHash) return;
+    ui.locked = true;
+    closeSheet();
+    $('#app').hidden = true; $('#tabs').hidden = true; $('#fab').hidden = true;
+    $('#lock').hidden = false;
+    $('#pin').value = ''; $('#lockErr').textContent = '';
+    setTimeout(function () { $('#pin').focus(); }, 60);
+  }
+  function unlock() {
+    ui.locked = false;
+    $('#lock').hidden = true; $('#app').hidden = false; $('#tabs').hidden = false;
+    render();
+  }
+  $('#lockForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    sha($('#pin').value).then(function (hh) {
+      if (hh === lsGet(PINKEY, '')) unlock();
+      else { $('#lockErr').textContent = 'PIN ശരിയല്ല'; $('#pin').value = ''; }
+    });
+  });
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) { ui.hiddenAt = Date.now(); return; }
+    if (pinSet() && !ui.locked && ui.hiddenAt && Date.now() - ui.hiddenAt > 30000) lockNow();
+  });
+
+  function openPinForm() {
+    var has = pinSet();
+    var cur = h('input', { id: 'pin-cur', type: 'password', inputmode: 'numeric', maxlength: '6', autocomplete: 'off' });
+    var n1 = h('input', { id: 'pin-new', type: 'password', inputmode: 'numeric', maxlength: '6', autocomplete: 'off' });
+    var n2 = h('input', { id: 'pin-new2', type: 'password', inputmode: 'numeric', maxlength: '6', autocomplete: 'off' });
+    var err = h('p', { class: 'form-err', role: 'alert' });
+    function done(msg) { closeSheet(); render(); toast(msg); }
+    function doSet() {
+      err.textContent = '';
+      var run = function () {
+        if (!/^\d{4,6}$/.test(n1.value)) { err.textContent = 'PIN 4 മുതൽ 6 വരെ അക്കങ്ങൾ ആയിരിക്കണം.'; return; }
+        if (n1.value !== n2.value) { err.textContent = 'രണ്ട് PIN-ഉം ഒരുപോലെ അല്ല.'; return; }
+        sha(n1.value).then(function (hh) { if (lsSet(PINKEY, hh)) done('PIN സെറ്റ് ചെയ്തു'); else err.textContent = 'സേവ് ചെയ്യാൻ കഴിഞ്ഞില്ല.'; });
+      };
+      if (has) sha(cur.value).then(function (hh) { if (hh === lsGet(PINKEY, '')) run(); else err.textContent = 'ഇപ്പോഴത്തെ PIN ശരിയല്ല.'; });
+      else run();
+    }
+    function doRemove() {
+      err.textContent = '';
+      sha(cur.value).then(function (hh) {
+        if (hh !== lsGet(PINKEY, '')) { err.textContent = 'ഇപ്പോഴത്തെ PIN ശരിയല്ല.'; return; }
+        try { localStorage.removeItem(PINKEY); } catch (e) { /* ignore */ }
+        done('PIN ഒഴിവാക്കി');
+      });
+    }
+    showSheet([
+      h('div', { class: 'sheet-head' }, h('h2', { text: has ? 'PIN മാറ്റുക' : 'PIN സെറ്റ് ചെയ്യുക' }), closeBtn()),
+      has ? field(T('ഇപ്പോഴത്തെ PIN', 'Current PIN'), cur) : null,
+      field(T('പുതിയ PIN', 'New PIN'), n1, '4 മുതൽ 6 വരെ അക്കങ്ങൾ'),
+      field(T('PIN ആവർത്തിക്കുക', 'Repeat PIN'), n2),
+      err,
+      h('div', { class: 'form-bar' },
+        h('button', { class: 'btn primary', type: 'button', onclick: doSet }, T('സേവ് ചെയ്യുക', 'Save')),
+        has ? h('button', { class: 'btn danger', type: 'button', onclick: doRemove }, T('PIN ഒഴിവാക്കുക', 'Remove')) : null)
+    ]);
+  }
+
+  function openMembers() {
+    api('members').then(function (j) {
+      var rows = (j.members || []).sort(function (a, b) { return (a.name || '').localeCompare(b.name || ''); }).map(function (m) {
+        return h('div', { class: 'card', style: 'display:flex;gap:8px;align-items:center;flex-wrap:wrap' },
+          h('b', { text: m.name, style: 'flex:1;min-width:120px' }),
+          h('button', { class: 'btn small', type: 'button', onclick: function () {
+            var pin = window.prompt ? window.prompt(m.name + ' ന് പുതിയ PIN (4-6 അക്കം)') : '';
+            if (!pin) return;
+            api('resetPin', { id: m.id, pin: pin.trim() }).then(function () { toast('PIN മാറ്റി'); }, function (e) { toast(e.message); });
+          } }, T('PIN മാറ്റുക', 'Reset PIN')),
+          h('button', { class: 'btn small danger', type: 'button', onclick: function () {
+            askSheet(m.name + ' ന്റെ ലോഗിൻ നീക്കം ചെയ്യട്ടെ?', T('നീക്കം ചെയ്യുക', 'Remove'), function () { api('removeMember', { id: m.id }).then(function () { toast('നീക്കി'); openMembers(); }, function (e) { toast(e.message); }); }, openMembers);
+          } }, T('നീക്കുക', 'Remove')));
+      });
+      showSheet([h('div', { class: 'sheet-head' }, h('h2', { text: 'അംഗങ്ങൾ' }), closeBtn()), rows.length ? rows : h('p', { text: 'ഇതുവരെ ആരും ലോഗിൻ ഉണ്ടാക്കിയിട്ടില്ല.' })]);
+    }, function (e) { toast(e.message); });
+  }
+
+  /* ---------- more view ---------- */
+  function moreRow(titleNode, desc, btnNode, fn, danger) {
+    return h('div', { class: 'card more-row' }, h('div', null, titleNode), h('p', { text: desc }),
+      h('button', { class: 'btn' + (danger ? ' danger' : ''), type: 'button', onclick: fn }, btnNode));
+  }
+  function viewMore() {
+    var wrap = h('div', { class: 'view' });
+    var R = net.remote, A = !R || net.admin;
+    if (R) wrap.appendChild(h('div', { class: 'notice', text: net.admin ? 'നിങ്ങൾ അഡ്മിൻ ആണ്: എല്ലാവരുടെയും വിവരങ്ങൾ (ആധാർ ഉൾപ്പെടെ) കാണാനും തിരുത്താനും ഡിലീറ്റ് ചെയ്യാനും കഴിയും. കുടുംബാംഗങ്ങൾക്ക് എല്ലാവരെയും കാണാം, പക്ഷേ ആധാറിന്റെ അവസാന 4 അക്കം മാത്രം. അവർ ചേർത്തവ മാത്രമേ തിരുത്താൻ കഴിയൂ. വിവരങ്ങൾ ഓൺലൈൻ ഡാറ്റാബേസിലാണ് സൂക്ഷിക്കുന്നത്.' : 'എല്ലാവരുടെയും വിവരങ്ങൾ കാണാം. നിങ്ങൾ ചേർത്തവ മാത്രം തിരുത്താം, പുതിയ അംഗങ്ങളെ ചേർക്കാം. മറ്റുള്ളവരുടേത് തിരുത്താനോ ഡിലീറ്റ് ചെയ്യാനോ കഴിയില്ല. ഡിലീറ്റ് ചെയ്യണമെങ്കിൽ അഡ്മിനോട് പറയുക.' }));
+    if (!R) wrap.appendChild(h('div', { class: 'notice', text: 'ആധാർ പോലുള്ള വിവരങ്ങൾ ഈ ഫോണിന്റെ ബ്രൗസറിൽ മാത്രമാണ് സൂക്ഷിക്കുന്നത്, ഒരു സെർവറിലേക്കും അയക്കുന്നില്ല. ബ്രൗസർ ഡാറ്റ മായ്ച്ചാൽ ഇതും പോകും. അതുകൊണ്ട് ഇടയ്ക്കിടെ ബാക്കപ്പ് എടുക്കുക.' }));
+    if (A) wrap.appendChild(moreRow(T('ബാക്കപ്പ് എടുക്കുക', 'Backup'), 'എല്ലാ വിവരങ്ങളും ഒരു ഫയലായി ഡൗൺലോഡ് ചെയ്യുക. ഇതിൽ ആധാർ നമ്പറുകൾ ഉണ്ടാകും, സുരക്ഷിതമായി സൂക്ഷിക്കുക.', T('ബാക്കപ്പ് ഡൗൺലോഡ്', 'Download backup'), exportJson));
+    if (A) wrap.appendChild(moreRow(T('ബാക്കപ്പ് തിരികെ ചേർക്കുക', 'Restore'), 'മുമ്പ് എടുത്ത ബാക്കപ്പ് ഫയൽ തിരഞ്ഞെടുക്കുക. ഇപ്പോഴുള്ള വിവരങ്ങൾ മായില്ല. പുതിയവ ചേർക്കുകയും പുതുക്കിയവ അപ്ഡേറ്റ് ചെയ്യുകയും ചെയ്യും. മറ്റൊരു ഫോണിലെ ബാക്കപ്പും ഇങ്ങനെ ചേർക്കാം.', T('ഫയൽ തിരഞ്ഞെടുക്കുക', 'Choose file'), function () { $('#importFile').click(); }));
+    if (A) wrap.appendChild(moreRow(T('Excel ആയി എടുക്കുക', 'Export CSV'), 'എല്ലാവരുടെയും വിവരങ്ങൾ ഒരു പട്ടികയായി (CSV) ഡൗൺലോഡ് ചെയ്യുക.', T('CSV ഡൗൺലോഡ്', 'Download CSV'), exportCsv));
+    if (canHash) {
+      wrap.appendChild(moreRow(T('PIN ലോക്ക്', 'PIN lock'), pinSet() ? 'PIN ഓൺ ആണ്. ആപ്പ് തുറക്കുമ്പോൾ PIN ചോദിക്കും. ഇത് സ്ക്രീൻ മറയ്ക്കാൻ മാത്രമാണ്, ബാക്കപ്പ് ഫയൽ എൻക്രിപ്റ്റ് ചെയ്യുന്നില്ല.' : 'മറ്റുള്ളവർ ഫോൺ എടുത്താലും കാണാതിരിക്കാൻ ഒരു PIN വെക്കുക. ഇത് സ്ക്രീൻ മറയ്ക്കാൻ മാത്രമാണ്, ബാക്കപ്പ് ഫയൽ എൻക്രിപ്റ്റ് ചെയ്യുന്നില്ല.', pinSet() ? T('PIN മാറ്റുക / ഒഴിവാക്കുക', 'Change or remove') : T('PIN സെറ്റ് ചെയ്യുക', 'Set PIN'), openPinForm));
+      if (pinSet()) wrap.appendChild(h('button', { class: 'btn', type: 'button', onclick: lockNow }, T('ഇപ്പോൾ ലോക്ക് ചെയ്യുക', 'Lock now')));
+    }
+    wrap.appendChild(h('button', { class: 'btn', type: 'button', onclick: logout }, T('ലോഗ് ഔട്ട്', 'Log out') ));
+    if (net.admin) wrap.appendChild(moreRow(T('അംഗങ്ങളുടെ ലോഗിൻ', 'Members'), 'ആരെങ്കിലും PIN മറന്നാൽ പുതിയത് വെക്കാം, അല്ലെങ്കിൽ ലോഗിൻ നീക്കം ചെയ്യാം (അവർ ചേർത്ത വിവരങ്ങൾ നീക്കം ചെയ്യില്ല).', T('അംഗങ്ങളെ കാണുക', 'Show members'), openMembers));
+    wrap.appendChild(h('div', { class: 'card help' }, h('h2', null, T('ഉപയോഗിക്കേണ്ട വിധം', 'How to use')),
+      h('ul', null,
+        h('li', { text: 'മുതിർന്ന ആളിൽ നിന്ന് തുടങ്ങുക (ഉദാ: മുത്തച്ഛൻ). അവരുടെ പേരിൽ അമർത്തുമ്പോൾ പങ്കാളി, മക്കൾ, അച്ഛൻ, അമ്മ എന്നിവരെ ചേർക്കാനുള്ള ബട്ടണുകൾ കിട്ടും.' }),
+        h('li', { text: '"കുട്ടിയെ ചേർക്കുക" അമർത്തിയാൽ അച്ഛനും അമ്മയും തനിയെ വരും. ഒന്നിലധികം വിവാഹം ഉണ്ടെങ്കിൽ ശരിയായ അമ്മ/അച്ഛനെ ലിസ്റ്റിൽ നിന്ന് മാറ്റിത്തിരഞ്ഞെടുക്കാം.' }),
+        h('li', { text: 'കുടുംബ വൃക്ഷത്തിൽ ഓരോ ദമ്പതികളുടെയും താഴെ മക്കൾ വരും. "▾ മക്കൾ" അമർത്തി ചുരുക്കാം.' }),
+        h('li', { text: 'അംഗങ്ങൾ ടാബിൽ പേര് അല്ലെങ്കിൽ ഫോൺ നമ്പർ തിരയാം. രക്തഗ്രൂപ്പ് അമർത്തിയാൽ ആ ഗ്രൂപ്പ് ഉള്ളവരെ മാത്രം കാണാം, അത്യാവശ്യ ഘട്ടത്തിൽ ഉപകരിക്കും.' }),
+        h('li', { text: 'ഫോണിൽ ആപ്പ് പോലെ ഉപയോഗിക്കാൻ ബ്രൗസർ മെനുവിൽ നിന്ന് "Add to Home screen" തിരഞ്ഞെടുക്കുക.' }))));
+    if (A) wrap.appendChild(moreRow(T('എല്ലാ ഡാറ്റയും മായ്ക്കുക', 'Erase everything'), (R ? 'എല്ലാവരുടെയും വിവരങ്ങൾ നീക്കം ചെയ്യും. ' : 'ഈ ഫോണിൽ നിന്ന് എല്ലാ കുടുംബ വിവരങ്ങളും നീക്കം ചെയ്യും. ') + 'ബാക്കപ്പ് ഇല്ലെങ്കിൽ തിരിച്ചെടുക്കാൻ കഴിയില്ല.', T('എല്ലാം മായ്ക്കുക', 'Erase all'), function () {
+      if (!state.people.length) { toast('മായ്ക്കാൻ ഡാറ്റ ഒന്നുമില്ല'); return; }
+      askSheet('എല്ലാ കുടുംബ വിവരങ്ങളും ഡിലീറ്റ് ചെയ്യട്ടെ? ഇത് തിരിച്ചെടുക്കാൻ കഴിയില്ല.', T('എല്ലാം മായ്ക്കുക', 'Erase all'), function () {
+        state.people = [];
+        save();
+        closeSheet();
+        render();
+        toast('എല്ലാം മായ്ച്ചു');
+      });
+    }, true));
+    return wrap;
+  }
+
+  /* ---------- main render ---------- */
+  var TABS = { tree: ['കുടുംബ വൃക്ഷം', 'Tree'], people: ['അംഗങ്ങൾ', 'People'], more: ['കൂടുതൽ', 'More'] };
+  function render() {
+    Object.keys(TABS).forEach(function (k) {
+      var b = document.querySelector('[data-tab="' + k + '"]');
+      b.textContent = '';
+      b.appendChild(T(TABS[k][0], TABS[k][1]));
+      if (ui.tab === k) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+    });
+    var v = $('#view');
+    v.textContent = '';
+    v.appendChild(ui.tab === 'tree' ? viewTree() : (ui.tab === 'people' ? viewPeople() : viewMore()));
+    var n = state.people.length;
+    $('#count').textContent = (n ? n + ' അംഗങ്ങൾ' : '') + (net.remote ? (n ? ' · ' : '') + (net.admin ? 'അഡ്മിൻ' : 'അംഗം') : '');
+    $('#fab').hidden = ui.tab === 'more' || ui.locked || !n;
+    $('#fabLabel').textContent = '';
+    $('#fabLabel').appendChild(T('അംഗത്തെ ചേർക്കുക', 'Add'));
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll('[data-tab]'), function (b) {
+    b.addEventListener('click', function () { ui.tab = b.getAttribute('data-tab'); render(); window.scrollTo(0, 0); });
+  });
+  $('#fab').addEventListener('click', function () { openForm({}); });
+  $('#sheet').addEventListener('click', function (e) { if (e.target === $('#sheet')) closeSheet(); });
+  $('#importFile').addEventListener('change', function (e) {
+    var f = e.target.files && e.target.files[0];
+    if (f) importFile(f);
+    e.target.value = '';
+  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('#sheet').hidden) closeSheet(); });
+
+  /* ---------- start ---------- */
+  initRemote();
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) { /* ignore */ }
+  render();
+  if (pinSet() && canHash) lockNow();
+})();
+</script>
+</body>
+</html>

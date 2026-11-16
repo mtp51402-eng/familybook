@@ -1,0 +1,7 @@
+{
+  "name": "family-book",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Family Book with admin and family-member logins (Vercel + Firebase Firestore)",
+  "engines": { "node": ">=18" }
+}
