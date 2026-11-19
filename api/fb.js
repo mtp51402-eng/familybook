@@ -208,7 +208,7 @@ module.exports = async function handler(req, res) {
     if (!auth) return send(401, { error: 'auth', message: 'വീണ്ടും ലോഗിൻ ചെയ്യുക.' });
 
     if (act === 'list') {
-      const [rows,memberEdit] = awaitpromise.all([store.list('people'),getMemberEdit()]);
+      const [rows,memberEdit] = await Promise.all([store.list('people'),getMemberEdit()]);
       return send(200, { role: auth.r, name: auth.n,memberEdit, people: rows.map(r => view(r, auth)) });
     }
 
