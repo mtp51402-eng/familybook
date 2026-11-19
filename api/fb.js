@@ -10,7 +10,7 @@ const DAY = 86400000;
 const BLOODS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
 /* ---------- storage: Firestore REST, or memory when FB_MOCK=1 (tests) ---------- */
-const mem = { people: new Map(), members: new Map() };
+const mem = { people: new Map(), members:new Map(),settings: new Map() };
 let gtok = { v: '', exp: 0 };
 function b64u(b) { return Buffer.from(b).toString('base64').replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_'); }
 async function googleToken() {
@@ -157,7 +157,10 @@ function view(rec, auth) {
   if (!mine) { p.aadhaarLast4 = p.aadhaar ? p.aadhaar.slice(-4) : ''; p.aadhaar = ''; }
   return p;
 }
-
+async function getMemberEdit() {
+  const doc = await store.get('settings', 'global');
+  return !!(doc && (doc.memberEdit === true || doc.memberEdit === 'true' || doc.memberEdit === 1));
+}
 /* ---------- handler ---------- */
 module.exports = async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
@@ -205,13 +208,14 @@ module.exports = async function handler(req, res) {
     if (!auth) return send(401, { error: 'auth', message: 'വീണ്ടും ലോഗിൻ ചെയ്യുക.' });
 
     if (act === 'list') {
-      const rows = await store.list('people');
-      return send(200, { role: auth.r, name: auth.n, people: rows.map(r => view(r, auth)) });
+      const [rows,memberEdit] = awaitpromise.all([store.list('people'),getMemberEdit()]);
+      return send(200, { role: auth.r, name: auth.n,memberEdit, people: rows.map(r => view(r, auth)) });
     }
 
     if (act === 'save') {
       const incoming = (Array.isArray(body.people) ? body.people : []).slice(0, 400);
-      const existing = new Map((await store.list('people')).map(r => [r._id, r]));
+      const [existingRows, memberEdit] = await Promise.all([store.list('people'), getMemberEdit()]);
+      const existing = new Map(existingRows.map(r => [r._id, r]));
       const writes = [], saved = [], skipped = [];
       incoming.forEach(x => {
         if (!x || !validId(s(x.id, 64))) { skipped.push(x && x.id); return; }
@@ -220,7 +224,7 @@ module.exports = async function handler(req, res) {
         const cur = existing.get(p.id);
         let owner, ownerName;
         if (cur) {
-          if (auth.r !== 'admin' && cur.owner !== auth.m) { skipped.push(p.id); return; }
+          if (auth.r !== 'admin' && !memberEdit && cur.owner !== auth.m) { skipped.push(p.id); return; }
           owner = cur.owner; ownerName = cur.ownerName;
         } else { owner = auth.m; ownerName = auth.n; }
         p.updatedAt = Date.now();
@@ -257,6 +261,12 @@ module.exports = async function handler(req, res) {
       if (!m) return send(404, { error: 'nouser' });
       await store.commit([{ op: 'set', col: 'members', id, obj: Object.assign({}, m, { pin: hashPin(pin), fails: 0, lockUntil: 0 }) }]);
       return send(200, { ok: true });
+    }
+    if (act === 'toggleMemberEdit') {
+      if (auth.r !== 'admin') return send(403, { error: 'forbidden', message: 'അഡ്മിന് മാത്രമേ ഇത് മാറ്റാൻ കഴിയൂ.' });
+      const enabled = !!body.enabled;
+      await store.commit([{ op: 'set', col: 'settings', id: 'global', obj: { memberEdit: enabled ? 'true' : 'false', updatedAt: Date.now() } }]);
+      return send(200, { ok: true, memberEdit: enabled });
     }
     return send(400, { error: 'action' });
   } catch (e) {
