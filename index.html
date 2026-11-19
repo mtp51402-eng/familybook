@@ -364,7 +364,7 @@ button:active { transform: scale(.97); }
   var KEY = 'familyBook.v1';
   var PINKEY = 'familyBook.pin';
   var state = { people: [] };
-  var net = { remote: true, admin: false, ready: false, token: '', name: '', written: {}, q: Promise.resolve(), members: [] };
+  var net = { remote: true, admin: false, memberEdit: false,ready:false, token: '', name: '', written: {}, q: Promise.resolve(), members: [] };
   var ui = { tab: 'tree', q: '', blood: '', collapsed: {}, reveal: {}, locked: false, hiddenAt: 0 };
   var BLOODS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
@@ -478,7 +478,7 @@ button:active { transform: scale(.97); }
     });
     return true;
   }
-  function mayEdit(p) { return net.admin || p._mine !== false; }
+  function mayEdit(p) { return net.admin ||net.memberEdit || p._mine !== false; }
   function strip(p) {
     var o = {};
     Object.keys(p).forEach(function (k) { if (k.charAt(0) !== '_' && k !== 'aadhaarLast4') o[k] = p[k]; });
@@ -515,7 +515,7 @@ button:active { transform: scale(.97); }
   }
   function loadRemote(quiet) {
     return api('list').then(function (j) {
-      net.admin = j.role === 'admin'; net.name = j.name || '';
+      net.admin = j.role === 'admin'; net.name = j.name || '';net.memberEdit=!!j.memberEdit;
       applyRemote(j.people || []);
       if (!ui.locked && (!quiet || $('#sheet').hidden)) render();
     }).catch(function (e) {
@@ -1213,6 +1213,20 @@ button:active { transform: scale(.97); }
     var wrap = h('div', { class: 'view' });
     var R = net.remote, A = !R || net.admin;
     if (R) wrap.appendChild(h('div', { class: 'notice', text: net.admin ? 'നിങ്ങൾ അഡ്മിൻ ആണ്: എല്ലാവരുടെയും വിവരങ്ങൾ (ആധാർ ഉൾപ്പെടെ) കാണാനും തിരുത്താനും ഡിലീറ്റ് ചെയ്യാനും കഴിയും. കുടുംബാംഗങ്ങൾക്ക് എല്ലാവരെയും കാണാം, പക്ഷേ ആധാറിന്റെ അവസാന 4 അക്കം മാത്രം. അവർ ചേർത്തവ മാത്രമേ തിരുത്താൻ കഴിയൂ. വിവരങ്ങൾ ഓൺലൈൻ ഡാറ്റാബേസിലാണ് സൂക്ഷിക്കുന്നത്.' : 'എല്ലാവരുടെയും വിവരങ്ങൾ കാണാം. നിങ്ങൾ ചേർത്തവ മാത്രം തിരുത്താം, പുതിയ അംഗങ്ങളെ ചേർക്കാം. മറ്റുള്ളവരുടേത് തിരുത്താനോ ഡിലീറ്റ് ചെയ്യാനോ കഴിയില്ല. ഡിലീറ്റ് ചെയ്യണമെങ്കിൽ അഡ്മിനോട് പറയുക.' }));
+    if (net.admin) {
+      wrap.appendChild(moreRow(
+        T('മെമ്പർ എഡിറ്റ് അനുമതി: ' + (net.memberEdit ? 'ON' : 'OFF'), 'Member Edit Access'),
+        'ഇത് ON ആക്കിയാൽ എല്ലാ കുടുംബാംഗങ്ങൾക്കും മറ്റുള്ളവരുടെ വിവരങ്ങൾ എഡിറ്റ് ചെയ്യാം. (ഡിലീറ്റ് ഓപ്ഷൻ അഡ്മിന് മാത്രമായിരിക്കും).',
+        T(net.memberEdit ? 'ഓഫ് ആക്കുക (Turn OFF)' : 'ഓൺ ആക്കുക (Turn ON)', net.memberEdit ? 'Disable' : 'Enable'),
+        function () {
+          api('toggleMemberEdit', { enabled: !net.memberEdit }).then(function (j) {
+            net.memberEdit = !!j.memberEdit;
+            toast(net.memberEdit ? 'മെമ്പർ എഡിറ്റ് ഓൺ ആക്കി' : 'മെമ്പർ എഡിറ്റ് ഓഫ് ആക്കി');
+            render();
+          }, function (e) { toast((e && e.message) || 'മാറ്റാൻ കഴിഞ്ഞില്ല'); });
+        }
+      ));
+    }
     if (!R) wrap.appendChild(h('div', { class: 'notice', text: 'ആധാർ പോലുള്ള വിവരങ്ങൾ ഈ ഫോണിന്റെ ബ്രൗസറിൽ മാത്രമാണ് സൂക്ഷിക്കുന്നത്, ഒരു സെർവറിലേക്കും അയക്കുന്നില്ല. ബ്രൗസർ ഡാറ്റ മായ്ച്ചാൽ ഇതും പോകും. അതുകൊണ്ട് ഇടയ്ക്കിടെ ബാക്കപ്പ് എടുക്കുക.' }));
     if (A) wrap.appendChild(moreRow(T('ബാക്കപ്പ് എടുക്കുക', 'Backup'), 'എല്ലാ വിവരങ്ങളും ഒരു ഫയലായി ഡൗൺലോഡ് ചെയ്യുക. ഇതിൽ ആധാർ നമ്പറുകൾ ഉണ്ടാകും, സുരക്ഷിതമായി സൂക്ഷിക്കുക.', T('ബാക്കപ്പ് ഡൗൺലോഡ്', 'Download backup'), exportJson));
     if (A) wrap.appendChild(moreRow(T('ബാക്കപ്പ് തിരികെ ചേർക്കുക', 'Restore'), 'മുമ്പ് എടുത്ത ബാക്കപ്പ് ഫയൽ തിരഞ്ഞെടുക്കുക. ഇപ്പോഴുള്ള വിവരങ്ങൾ മായില്ല. പുതിയവ ചേർക്കുകയും പുതുക്കിയവ അപ്ഡേറ്റ് ചെയ്യുകയും ചെയ്യും. മറ്റൊരു ഫോണിലെ ബാക്കപ്പും ഇങ്ങനെ ചേർക്കാം.', T('ഫയൽ തിരഞ്ഞെടുക്കുക', 'Choose file'), function () { $('#importFile').click(); }));
