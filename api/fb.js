@@ -10,7 +10,7 @@ const DAY = 86400000;
 const BLOODS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
 /* ---------- storage: Firestore REST, or memory when FB_MOCK=1 (tests) ---------- */
-const mem = { people: new Map(), members:new Map(),settings: new Map() };
+const mem = { people: new Map(), members: new Map(), settings: new Map() };
 let gtok = { v: '', exp: 0 };
 function b64u(b) { return Buffer.from(b).toString('base64').replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_'); }
 async function googleToken() {
@@ -45,25 +45,25 @@ function dec(doc) {
   Object.keys(doc.fields || {}).forEach(k => { const v = doc.fields[k]; o[k] = v.stringValue !== undefined ? v.stringValue : (v.integerValue !== undefined ? Number(v.integerValue) : ''); });
   return o;
 }
-async function fsFetch(url, opt) {
+async function fsFetch(url, opt, allow404) {
   const t = await googleToken();
   const r = await fetch('https://firestore.googleapis.com/v1/' + url, Object.assign({ headers: { Authorization: 'Bearer ' + t, 'Content-Type': 'application/json' } }, opt));
-  if (r.status === 404) return null;
-  const j = await r.json();
+  if (r.status === 404 && allow404) return null;
+  const j = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error('Firestore ' + r.status + ': ' + ((j.error && j.error.message) || ''));
   return j;
 }
 const store = {
   async get(col, id) {
     if (process.env.FB_MOCK) return (mem[col].get(id) || null);
-    const d = await fsFetch(base() + '/' + col + '/' + id);
+    const d = await fsFetch(base() + '/' + col + '/' + id, undefined, true);
     return d ? dec(d) : null;
   },
   async list(col) {
     if (process.env.FB_MOCK) return Array.from(mem[col].entries()).map(([id, v]) => Object.assign({ _id: id }, v));
     const out = []; let tok = '';
     do {
-      const d = await fsFetch(base() + '/' + col + '?pageSize=300' + (tok ? '&pageToken=' + encodeURIComponent(tok) : ''));
+      const d = await fsFetch(base() + '/' + col + '?pageSize=300' + (tok ? '&pageToken=' + encodeURIComponent(tok) : ''), undefined, true);
       if (!d) break;
       (d.documents || []).forEach(x => out.push(Object.assign({ _id: x.name.split('/').pop() }, dec(x))));
       tok = d.nextPageToken || '';
@@ -148,19 +148,18 @@ function cleanPerson(x) {
 }
 const validId = id => /^[A-Za-z0-9_-]{6,64}$/.test(id);
 
-function view(rec, auth) {
+function view(rec, auth, open) {
   const p = JSON.parse(rec.d);
   p._o = rec.owner;
   p._on = rec.ownerName || '';
   const mine = auth.r === 'admin' || rec.owner === auth.m;
-  p._mine = mine;
+  p._mine = mine || !!open;
   if (!mine) { p.aadhaarLast4 = p.aadhaar ? p.aadhaar.slice(-4) : ''; p.aadhaar = ''; }
   return p;
 }
-async function getMemberEdit() {
-  const doc = await store.get('settings', 'global');
-  return !!(doc && (doc.memberEdit === true || doc.memberEdit === 'true' || doc.memberEdit === 1));
-}
+
+async function memberEditOn() { const x = await store.get('settings', 'main'); return !!(x && x.memberEdit === 1); }
+
 /* ---------- handler ---------- */
 module.exports = async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
@@ -208,14 +207,15 @@ module.exports = async function handler(req, res) {
     if (!auth) return send(401, { error: 'auth', message: 'വീണ്ടും ലോഗിൻ ചെയ്യുക.' });
 
     if (act === 'list') {
-      const [rows,memberEdit] = await Promise.all([store.list('people'),getMemberEdit()]);
-      return send(200, { role: auth.r, name: auth.n,memberEdit, people: rows.map(r => view(r, auth)) });
+      const rows = await store.list('people');
+      const open = await memberEditOn();
+      return send(200, { role: auth.r, name: auth.n, memberEdit: open, people: rows.map(r => view(r, auth, open)) });
     }
 
     if (act === 'save') {
       const incoming = (Array.isArray(body.people) ? body.people : []).slice(0, 400);
-      const [existingRows, memberEdit] = await Promise.all([store.list('people'), getMemberEdit()]);
-      const existing = new Map(existingRows.map(r => [r._id, r]));
+      const open = await memberEditOn();
+      const existing = new Map((await store.list('people')).map(r => [r._id, r]));
       const writes = [], saved = [], skipped = [];
       incoming.forEach(x => {
         if (!x || !validId(s(x.id, 64))) { skipped.push(x && x.id); return; }
@@ -224,7 +224,9 @@ module.exports = async function handler(req, res) {
         const cur = existing.get(p.id);
         let owner, ownerName;
         if (cur) {
-          if (auth.r !== 'admin' && !memberEdit && cur.owner !== auth.m) { skipped.push(p.id); return; }
+          const mine = auth.r === 'admin' || cur.owner === auth.m;
+          if (!mine && !open) { skipped.push(p.id); return; }
+          if (!mine) { try { p.aadhaar = JSON.parse(cur.d).aadhaar || ''; } catch (e) { p.aadhaar = ''; } }
           owner = cur.owner; ownerName = cur.ownerName;
         } else { owner = auth.m; ownerName = auth.n; }
         p.updatedAt = Date.now();
@@ -232,7 +234,13 @@ module.exports = async function handler(req, res) {
         saved.push(p.id);
       });
       await store.commit(writes);
-      return send(200, { saved, skipped });
+      return send(200, { saved, skipped, asked: incoming.length });
+    }
+
+    if (act === 'setMemberEdit') {
+      if (auth.r !== 'admin') return send(403, { error: 'forbidden', message: 'അഡ്മിന് മാത്രം.' });
+      await store.commit([{ op: 'set', col: 'settings', id: 'main', obj: { memberEdit: body.on ? 1 : 0 } }]);
+      return send(200, { memberEdit: !!body.on });
     }
 
     if (act === 'delete') {
@@ -261,12 +269,6 @@ module.exports = async function handler(req, res) {
       if (!m) return send(404, { error: 'nouser' });
       await store.commit([{ op: 'set', col: 'members', id, obj: Object.assign({}, m, { pin: hashPin(pin), fails: 0, lockUntil: 0 }) }]);
       return send(200, { ok: true });
-    }
-    if (act === 'toggleMemberEdit') {
-      if (auth.r !== 'admin') return send(403, { error: 'forbidden', message: 'അഡ്മിന് മാത്രമേ ഇത് മാറ്റാൻ കഴിയൂ.' });
-      const enabled = !!body.enabled;
-      await store.commit([{ op: 'set', col: 'settings', id: 'global', obj: { memberEdit: enabled ? 'true' : 'false', updatedAt: Date.now() } }]);
-      return send(200, { ok: true, memberEdit: enabled });
     }
     return send(400, { error: 'action' });
   } catch (e) {
